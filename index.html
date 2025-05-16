@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guest Refreshment Order</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+      color: #333;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #25d366;
+      color: white;
+      border: none;
+      margin-top: 30px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1ebe5d;
+    }
+    .info-message {
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #666;
+    }
+    .guest-block {
+      position: relative;
+      padding: 20px;
+      border: 1px dashed #ccc;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+    }
+    .remove-guest-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      margin-top: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 10px;
+      width: 100%;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    .remove-guest-btn:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Engphil</h1>
+    <h2>Please place your refreshment order</h2>
+
+    <div class="info-message">
+      <p>By submitting this form, you will be using your WhatsApp account to place your order.</p>
+    </div>
+
+    <form id="orderForm">
+      <div id="guestsContainer">
+        <!-- Guest blocks will be injected here -->
+      </div>
+
+      <button type="button" onclick="addGuest()">+ Add Another Guest</button>
+      <button type="submit">Submit All Orders</button>
+    </form>
+  </div>
+
+  <script>
+    function addGuest() {
+      const guestBlock = document.createElement('div');
+      guestBlock.className = 'guest-block';
+
+      guestBlock.innerHTML = `
+        <label>Guest Name:</label>
+        <input type="text" name="name" placeholder="Enter guest name" required>
+
+        <label>Choose a drink:</label>
+        <select name="drink" onchange="toggleSugar(this)">
+          <option value="Cappuccino">Cappuccino</option>
+          <option value="Flat White">Flat White</option>
+          <option value="Americano">Americano</option>
+          <option value="Espresso">Espresso</option>
+          <option value="Black Coffee">Black Coffee</option>
+          <option value="Black Tea">Black Tea</option>
+          <option value="Water">Water</option>
+        </select>
+
+        <div class="sugar-container">
+          <label>Sugar preference:</label>
+          <select name="sugar">
+            <option value="With Sugar">With Sugar</option>
+            <option value="Without Sugar">Without Sugar</option>
+          </select>
+        </div>
+
+        <label>Special instructions:</label>
+        <textarea name="instructions" rows="2" placeholder="Optional..."></textarea>
+
+        <button type="button" class="remove-guest-btn" onclick="removeGuest(this)">Remove Guest</button>
+      `;
+
+      document.getElementById('guestsContainer').appendChild(guestBlock);
+    }
+
+    function removeGuest(button) {
+      button.parentElement.remove();
+    }
+
+    function toggleSugar(selectEl) {
+      const drink = selectEl.value;
+      const sugarContainer = selectEl.closest('.guest-block').querySelector('.sugar-container');
+      sugarContainer.style.display = (drink === "Water") ? "none" : "block";
+    }
+
+    document.getElementById("orderForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const phone = '971565014432'; // WhatsApp number without '+'
+      const guests = document.querySelectorAll('.guest-block');
+
+      if (guests.length === 0) {
+        alert("Please add at least one guest.");
+        return;
+      }
+
+      let message = "New Guest Refreshment Order:%0A";
+
+      for (let i = 0; i < guests.length; i++) {
+        const guest = guests[i];
+        const name = guest.querySelector('input[name="name"]').value.trim();
+        const drink = guest.querySelector('select[name="drink"]').value;
+        const sugarSelect = guest.querySelector('select[name="sugar"]');
+        const sugar = (drink === "Water") ? "No Sugar" : sugarSelect.value;
+        const instructions = guest.querySelector('textarea[name="instructions"]').value.trim();
+
+        if (!name) {
+          alert(`Please enter the name for Guest ${i + 1}`);
+          return;
+        }
+
+        message += `\nGuest ${i + 1}:%0A`;
+        message += `Name: ${name}%0A`;
+        message += `Drink: ${drink}%0A`;
+        message += `Sugar: ${sugar}%0A`;
+        if (instructions) message += `Instructions: ${instructions}%0A`;
+      }
+
+      const url = `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
+      window.open(url, '_blank');
+    });
+
+    // Add one guest on page load
+    window.onload = () => {
+      addGuest();
+    };
+  </script>
+</body>
+</html>
